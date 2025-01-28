@@ -9,5 +9,4 @@ Calculate total price based on inputs.
 Light and dark mode support.
 Search products by title or category.
 Data stored locally using localStorage.
-هل هذا الوصف مناسب؟ إذا كنت تحتاج إلى أي تعديلات إضافية أو تفاصيل أخرى، أخبرني!
 </p>
