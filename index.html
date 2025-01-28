@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            background-color: #222;
+            color: #fff;
+            font-family: system-ui;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.light-mode {
+            background-color: #fff;
+            color: #222;
+        }
+
+        .cruds {
+            width: 80%;
+            margin: auto;
+        }
+
+        .text {
+            text-align: center;
+            text-transform: uppercase;
+            margin: 10px;
+        }
+
+        input {
+            width: 100%;
+            height: 30px;
+            outline: none;
+            border: none;
+            background-color: #111;
+            margin: 4px 0;
+            padding: 4px;
+            border-radius: 5px;
+            color: white;
+            transition: 0.3s;
+        }
+
+        body.light-mode input {
+            background-color: #eee;
+            color: #222;
+        }
+
+        input:focus {
+            background-color: #000;
+            transform: scale(1.1);
+        }
+
+        body.light-mode input:focus {
+            background-color: #ddd;
+        }
+
+        .price {
+            display: flex;
+            align-items: center;
+        }
+
+        .price input {
+            width: 20%;
+        }
+
+        #total {
+            background-color: brown;
+            padding: 4px 2px;
+            border-radius: 4px;
+        }
+
+        #total::before {
+            content: 'Total:';
+        }
+
+        button {
+            width: 100%;
+            height: 40px;
+            border: none;
+            cursor: pointer;
+            background-color: #560875;
+            color: #fff;
+            border-radius: 20px;
+            transition: 1.5s;
+            font-size: 25px;
+            margin: 1rem;
+        }
+
+        button:hover {
+            background-color: #51025f;
+            letter-spacing: 1.5px;
+        }
+
+        /* Theme toggle button special styling */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            background-color: #560875;
+        }
+
+        .theme-toggle:hover {
+            letter-spacing: 0;
+        }
+
+        .btnsearch {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btnsearch button {
+            width: 45%;
+        }
+
+        table {
+            width: 100%;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        table th {
+            text-transform: uppercase;
+        }
+
+        th, td {
+            padding: 5px;
+        }
+
+        body.light-mode #deleteAll {
+            background-color: #ff3333;
+            margin: 1rem;
+        }
+
+        body.light-mode button {
+            background-color: #560875;
+        }
+
+        body.light-mode button:hover {
+            background-color: #51025f;
+        }
+    </style>
+</head>
+<body>
+    <div class="cruds">
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-sun"></i>
+        </button>
+        <div class="text">
+            <h1>CRUDS</h1>
+            <p>Product Management System</p>
+        </div>
+        <div class="inputs">
+            <input type="text" placeholder="Title" id="title">
+            <div class="price">
+                <input onkeyup="getTotal()" type="number" placeholder="Price" id="price">
+                <input onkeyup="getTotal()" type="number" placeholder="Taxes" id="text">
+                <input onkeyup="getTotal()" type="number" placeholder="Ads" id="ads">
+                <input onkeyup="getTotal()" type="number" placeholder="Discount" id="dicount">
+                <small id="total"></small>
+            </div>
+            <input type="number" placeholder="Count" id="count">
+            <input type="text" placeholder="Category" id="category">
+            <button id="creat" onclick="savePro()">Create</button>
+        </div>
+        <div class="outputs">
+            <div class="searchblock">
+                <input type="text" id="search" placeholder="Search" onkeyup="searchData(this.value)">
+                <div class="btnsearch">
+                    <button onclick="getSearchMode('title')" id="searchtitle">Search by Title</button>
+                    <button onclick="getSearchMode('category')" id="searchcategory">Search by Category</button>
+                </div>
+            </div>
+            <button onclick="deleteAll()" id="deleteAll" style="display: none;">Delete All</button>
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Taxes</th>
+                    <th>Ads</th>
+                    <th>Discount</th>
+                    <th>Total</th>
+                    <th>Category</th>
+                    <th>Update</th>
+                    <th>Delete</th>
+                </tr>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Get elements
+        let title = document.getElementById('title');
+        let price = document.getElementById('price');
+        let taxes = document.getElementById('text');
+        let ads = document.getElementById('ads');
+        let discount = document.getElementById('dicount');
+        let total = document.getElementById('total');
+        let count = document.getElementById('count');
+        let category = document.getElementById('category');
+        let creat = document.getElementById('creat');
+        let search = document.getElementById('search');
+        let searchMood = 'title';
+        let mood = 'create';
+        let tmp;
+
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.querySelector('.theme-toggle i');
+            
+            body.classList.toggle('light-mode');
+            
+            if (body.classList.contains('light-mode')) {
+                themeToggle.classList.remove('fa-sun');
+                themeToggle.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeToggle.classList.remove('fa-moon');
+                themeToggle.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Check saved theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle i');
+            
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-mode');
+                themeToggle.classList.remove('fa-sun');
+                themeToggle.classList.add('fa-moon');
+            }
+        });
+
+        // Get total
+        function getTotal() {
+            if (price.value != '') {
+                let result = (+price.value + +taxes.value + +ads.value) - +discount.value;
+                total.innerHTML = result;
+                total.style.background = result > 0 ? 'brown' : 'red';
+            } else {
+                total.innerHTML = '';
+                total.style.background = 'brown';
+            }
+        }
+
+        // Create product
+        let dataPro = localStorage.product ? JSON.parse(localStorage.product) : [];
+
+        function savePro() {
+            let newPro = {
+                title: title.value,
+                price: price.value,
+                taxes: taxes.value,
+                ads: ads.value,
+                discount: discount.value,
+                total: total.innerHTML,
+                count: count.value,
+                category: category.value,
+            }
+
+            if (title.value != '' && price.value != '' && category.value != '') {
+                if (mood === 'create') {
+                    if (newPro.count > 1) {
+                        for (let i = 0; i < newPro.count; i++) {
+                            dataPro.push({...newPro});
+                        }
+                    } else {
+                        dataPro.push(newPro);
+                    }
+                } else {
+                    dataPro[tmp] = newPro;
+                    mood = 'create';
+                    creat.innerHTML = 'Create';
+                    count.style.display = 'block';
+                }
+                clearData();
+            }
+
+            localStorage.setItem('product', JSON.stringify(dataPro));
+            showData();
+        }
+
+        // Clear inputs
+        function clearData() {
+            title.value = '';
+            price.value = '';
+            taxes.value = '';
+            ads.value = '';
+            discount.value = '';
+            total.innerHTML = '';
+            count.value = '';
+            category.value = '';
+        }
+
+        // Show data
+        function showData() {
+            getTotal();
+            let table = '';
+            for (let i = 0; i < dataPro.length; i++) {
+                table += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${dataPro[i].title}</td>
+                        <td>${dataPro[i].price}</td>
+                        <td>${dataPro[i].taxes}</td>
+                        <td>${dataPro[i].ads}</td>
+                        <td>${dataPro[i].discount}</td>
+                        <td>${dataPro[i].total}</td>
+                        <td>${dataPro[i].category}</td>
+                        <td><button onclick="updateData(${i})">Update</button></td>
+                        <td><button onclick="deleteData(${i})">Delete</button></td>
+                    </tr>
+                `;
+            }
+            document.getElementById('tbody').innerHTML = table;
+            
+            let deleteAllBtn = document.getElementById('deleteAll');
+            if (dataPro.length > 0) {
+                deleteAllBtn.style.display = 'block';
+                deleteAllBtn.innerHTML = `Delete All (${dataPro.length})`;
+            } else {
+                deleteAllBtn.style.display = 'none';
+            }
+        }
+
+        // Delete data
+        function deleteData(i) {
+            dataPro.splice(i, 1);
+            localStorage.product = JSON.stringify(dataPro);
+            showData();
+        }
+
+        // Delete all
+        function deleteAll() {
+            localStorage.removeItem('product');
+            dataPro = [];
+            showData();
+        }
+
+        // Update data
+        function updateData(i) {
+            title.value = dataPro[i].title;
+            price.value = dataPro[i].price;
+            taxes.value = dataPro[i].taxes;
+            ads.value = dataPro[i].ads;
+            discount.value = dataPro[i].discount;
+            getTotal();
+            count.style.display = 'none';
+            category.value = dataPro[i].category;
+            creat.innerHTML = 'Update';
+            mood = 'update';
+            tmp = i;
+            scroll({
+                top: 0,
+                behavior: 'smooth',
+            });
+        }
+
+        // Search
+        function getSearchMode(id) {
+            searchMood = id;
+            search.placeholder = 'Search By ' + id;
+            search.focus();
+            search.value = '';
+            showData();
+        }
+
+        function searchData(value) {
+            let table = '';
+            for (let i = 0; i < dataPro.length; i++) {
+                if (searchMood === 'title') {
+                    if (dataPro[i].title.toLowerCase().includes(value.toLowerCase())) {
+                        table += createTableRow(i);
+                    }
+                } else {
+                    if (dataPro[i].category.toLowerCase().includes(value.toLowerCase())) {
+                        table += createTableRow(i);
+                    }
+                }
+            }
+            document.getElementById('tbody').innerHTML = table;
+        }
+
+        function createTableRow(i) {
+            return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>${dataPro[i].title}</td>
+                    <td>${dataPro[i].price}</td>
+                    <td>${dataPro[i].taxes}</td>
+                    <td>${dataPro[i].ads}</td>
+                    <td>${dataPro[i].discount}</td>
+                    <td>${dataPro[i].total}</td>
+                    <td>${dataPro[i].category}</td>
+                    <td><button onclick="updateData(${i})">Update</button></td>
+                    <td><button onclick="deleteData(${i})">Delete</button></td>
+                </tr>
+            `;
+        }
+
+        // Load initial data
+        showData();
+    </script>
+</body>
+</html>
